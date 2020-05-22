@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -134,7 +135,7 @@ func (c *Commands) uploadTo(chID discord.Snowflake, name string) error {
 		// Search for file.
 		for _, f := range d {
 			// If the filename without the extension matches the user input.
-			if filepath.Base(f.Name()) == name {
+			if trimExt(f.Name()) == name {
 				name = f.Name()
 				break
 			}
@@ -179,6 +180,13 @@ func (c *Commands) pollSubscribes() (sendTo []discord.Snowflake) {
 	}
 
 	return
+}
+
+func trimExt(file string) string {
+	if file == "" {
+		return ""
+	}
+	return strings.Split(file, ".")[0]
 }
 
 type Filename string
