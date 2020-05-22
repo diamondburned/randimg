@@ -83,7 +83,7 @@ func (c *Commands) Subscribe(
 	c.Ctx.DeleteMessage(chID, s.ID)
 
 	c.subscriptionMu.Lock()
-	c.subscriptions[m.ChannelID] = &channelSubscription{
+	c.subscriptions[chID] = &channelSubscription{
 		dura: time.Duration(dura),
 		last: time.Now(),
 	}
