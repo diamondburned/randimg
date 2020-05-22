@@ -29,7 +29,7 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	cmd := &Commands{}
+	cmd := NewCommands()
 	go cmd.startWorker()
 
 	w, err := bot.Start(os.Getenv("BOT_TOKEN"), cmd, func(ctx *bot.Context) error {
