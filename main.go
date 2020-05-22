@@ -12,6 +12,7 @@ import (
 
 	"github.com/diamondburned/arikawa/api"
 	"github.com/diamondburned/arikawa/bot"
+	"github.com/diamondburned/arikawa/bot/extras/arguments"
 	"github.com/diamondburned/arikawa/discord"
 	"github.com/diamondburned/arikawa/gateway"
 	"github.com/pkg/errors"
@@ -63,12 +64,18 @@ func (c *Commands) Random(m *gateway.MessageCreateEvent) error {
 	return c.randomTo(m.ChannelID)
 }
 
-func (c *Commands) Subscribe(m *gateway.MessageCreateEvent, dura Duration) error {
-	s, err := c.Ctx.SendText(m.ChannelID, "Test.")
+func (c *Commands) Subscribe(
+	m *gateway.MessageCreateEvent, ch arguments.ChannelMention, dura Duration) (string, error) {
+
+	chID := discord.Snowflake(ch)
+
+	s, err := c.Ctx.SendText(chID, "Test.")
 	if err != nil {
 		// This would probably not send, but whatever.
-		return errors.Wrap(err, "Failed to send a message")
+		return "", errors.Wrap(err, "Failed to send a message")
 	}
+
+	c.Ctx.DeleteMessage(chID, s.ID)
 
 	c.subscriptionMu.Lock()
 	c.subscriptions[m.ChannelID] = &channelSubscription{
@@ -77,18 +84,19 @@ func (c *Commands) Subscribe(m *gateway.MessageCreateEvent, dura Duration) error
 	}
 	c.subscriptionMu.Unlock()
 
-	c.Ctx.EditText(m.ChannelID, s.ID, "Subscribed.")
-	return nil
+	return "Subscribed.", nil
 }
 
-func (c *Commands) Unsubscribe(m *gateway.MessageCreateEvent) error {
+func (c *Commands) Unsubscribe(m *gateway.MessageCreateEvent, ch arguments.ChannelMention) error {
+	chID := discord.Snowflake(ch)
+
 	c.subscriptionMu.Lock()
 	defer c.subscriptionMu.Unlock()
 
-	if _, ok := c.subscriptions[m.ChannelID]; !ok {
+	if _, ok := c.subscriptions[chID]; !ok {
 		return errors.New("You're not subscribed.")
 	}
-	delete(c.subscriptions, m.ChannelID)
+	delete(c.subscriptions, chID)
 	return nil
 }
 
