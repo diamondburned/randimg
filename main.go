@@ -124,6 +124,23 @@ func (c *Commands) randomTo(chIDs ...discord.Snowflake) error {
 }
 
 func (c *Commands) uploadTo(chID discord.Snowflake, name string) error {
+	// If the extension is empty, search.
+	if filepath.Ext(name) == "" {
+		d, err := ioutil.ReadDir(cwd)
+		if err != nil {
+			return errors.Wrap(err, "Failed to read directory")
+		}
+
+		// Search for file.
+		for _, f := range d {
+			// If the filename without the extension matches the user input.
+			if filepath.Base(f.Name()) == name {
+				name = f.Name()
+				break
+			}
+		}
+	}
+
 	f, err := os.Open(filepath.Join(cwd, name))
 	if err != nil {
 		return errors.New("Path not found.")
