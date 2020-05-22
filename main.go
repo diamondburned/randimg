@@ -29,7 +29,10 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	w, err := bot.Start(os.Getenv("BOT_TOKEN"), &Commands{}, func(ctx *bot.Context) error {
+	cmd := &Commands{}
+	go cmd.startWorker()
+
+	w, err := bot.Start(os.Getenv("BOT_TOKEN"), cmd, func(ctx *bot.Context) error {
 		ctx.HasPrefix = bot.NewPrefix("!")
 		return nil
 	})
@@ -39,6 +42,11 @@ func main() {
 	w()
 }
 
+type channelSubscription struct {
+	dura time.Duration
+	last time.Time
+}
+
 type Commands struct {
 	Ctx *bot.Context
 
@@ -46,17 +54,10 @@ type Commands struct {
 	subscriptions  map[discord.Snowflake]*channelSubscription
 }
 
-type channelSubscription struct {
-	dura time.Duration
-	last time.Time
-}
-
-type Filename string
-
-func (f *Filename) Parse(str string) error {
-	// Sanitize filepath.
-	*f = Filename(filepath.Base(filepath.Clean(str)))
-	return nil
+func NewCommands() *Commands {
+	return &Commands{
+		subscriptions: make(map[discord.Snowflake]*channelSubscription),
+	}
 }
 
 func (c *Commands) Upload(m *gateway.MessageCreateEvent, fn Filename) error {
@@ -139,7 +140,7 @@ func (c *Commands) uploadTo(chID discord.Snowflake, name string) error {
 }
 
 func (c *Commands) startWorker() {
-	for range time.Tick(5 * time.Second) {
+	for range time.Tick(15 * time.Second) {
 		channelIDs := c.pollSubscribes()
 		if len(channelIDs) > 0 {
 			go c.randomTo(channelIDs...)
@@ -161,6 +162,14 @@ func (c *Commands) pollSubscribes() (sendTo []discord.Snowflake) {
 	}
 
 	return
+}
+
+type Filename string
+
+func (f *Filename) Parse(str string) error {
+	// Sanitize filepath.
+	*f = Filename(filepath.Base(filepath.Clean(str)))
+	return nil
 }
 
 type Duration time.Duration
