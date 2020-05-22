@@ -172,7 +172,7 @@ func (c *Commands) pollSubscribes() (sendTo []discord.Snowflake) {
 	now := time.Now()
 
 	for chID, sub := range c.subscriptions {
-		if sub.last.Add(sub.dura).After(now) {
+		if sub.last.Add(sub.dura).Before(now) {
 			sendTo = append(sendTo, chID)
 			sub.last = now
 		}
