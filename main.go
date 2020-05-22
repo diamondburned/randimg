@@ -53,11 +53,14 @@ type channelSubscription struct {
 
 type Filename string
 
-func (c *Commands) Upload(m *gateway.MessageCreateEvent, fn Filename) error {
+func (f *Filename) Parse(str string) error {
 	// Sanitize filepath.
-	name := filepath.Base(filepath.Clean(string(fn)))
+	*f = Filename(filepath.Base(filepath.Clean(str)))
+	return nil
+}
 
-	return c.uploadTo(m.ChannelID, name)
+func (c *Commands) Upload(m *gateway.MessageCreateEvent, fn Filename) error {
+	return c.uploadTo(m.ChannelID, string(fn))
 }
 
 func (c *Commands) Random(m *gateway.MessageCreateEvent) error {
